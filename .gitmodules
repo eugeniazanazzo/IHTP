@@ -1,0 +1,3 @@
+[submodule "external/easylocal-3"]
+	path = external/easylocal-3
+	url = https://bitbucket.org/satt/easylocal-3.git

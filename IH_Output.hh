@@ -10,6 +10,7 @@ class IH_Output
   friend istream& operator>>(istream& is, IH_Output& out);
   friend bool operator==(const IH_Output& out1, const IH_Output& out2);
  public:
+  IH_Output(const IH_Output& out) = default;
   IH_Output& operator=(const IH_Output& out);
   IH_Output(const IH_Input& my_in);
   void AssignPatient(int p, int d, int r, int t);

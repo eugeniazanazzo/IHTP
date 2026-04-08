@@ -28,6 +28,7 @@ IH_Output::IH_Output(const IH_Input& my_in)
    daily_admissions(in.Days(),vector<int>())
 {}
 
+
 IH_Output& IH_Output::operator=(const IH_Output& out)
 {
   admission_day = out.admission_day;
@@ -55,7 +56,8 @@ IH_Output& IH_Output::operator=(const IH_Output& out)
 
 ostream& operator<<(ostream& os, const IH_Output& out)
 {
-  int p, r, s, t, d, i;
+  int p, r, s, t, d, j;
+  size_t i;
   os << "Patients<id,admission_day,room,op_room>: ";
   for (p = 0; p < out.in.Patients(); p++)
     os << "<" << out.in.PatientId(p) << "," 
@@ -92,9 +94,9 @@ ostream& operator<<(ostream& os, const IH_Output& out)
         string gender;         
         if (out.room_day_patient_list[r][d].size() == 0 && out.in.OccupantsPresent(r,d)==0)
           os << "--- ";
-        for (i = 0; i < out.in.OccupantsPresent(r,d); i++){
-          gender=(out.in.OccupantGender(out.in.OccupantPresence(r,d,i))==Gender::A)?"A) ":"B) ";
-          os << out.in.OccupantId(out.in.OccupantPresence(r,d,i)) <<"("<<gender;
+        for (j = 0; j < out.in.OccupantsPresent(r,d); j++){
+          gender=(out.in.OccupantGender(out.in.OccupantPresence(r,d,j))==Gender::A)?"A) ":"B) ";
+          os << out.in.OccupantId(out.in.OccupantPresence(r,d,j)) <<"("<<gender;
         }        
         for (i = 0; i < out.room_day_patient_list[r][d].size(); i++){
           if(out.room_day_patient_list[r][d][i]<out.in.Patients()){
@@ -129,7 +131,8 @@ istream& operator>>(istream& is, IH_Output& out)
 {
 	nlohmann::json j_sol,j_n,j_p;
     is >> j_sol;
-	int p,d,r,t,n,i,j,s,ind,scheduled=0;
+	int p,d,r,t,s,ind,scheduled=0;
+  size_t i, j, n;
   string nurse_id,patient_id,shift_name,room_id;
 	out.Reset();
     for (i = 0; i < j_sol["patients"].size(); i++)
@@ -334,7 +337,7 @@ void IH_Output::AssignPatient(int p, int ad, int r, int t)
 
 void IH_Output::AssignNurse(int n, int r, int s)
 {
-  int d, i, p, s1;
+  int d, p, s1;
   if (!in.IsNurseWorkingInShift(n,s))
   {
     stringstream ss;
@@ -344,7 +347,7 @@ void IH_Output::AssignNurse(int n, int r, int s)
   room_shift_nurse[r][s] = n;
   nurse_shift_room_list[n][s].emplace_back(r);
   d = s/in.ShiftsPerDay();
-  for (i = 0; i < room_day_patient_list[r][d].size(); i++)
+  for (size_t i = 0; i < room_day_patient_list[r][d].size(); i++)
   { 
 	  p = room_day_patient_list[r][d][i];
     if(p<in.Patients()){
@@ -511,12 +514,12 @@ void IH_Output::ChangeRoom(int p,int nr){
 }
 
 void IH_Output::ChangeNurse(int s, int r, int nn){
-  int on=room_shift_nurse[r][s],d=s/in.ShiftsPerDay(),p,rel_sh,i,j;
+  int on=room_shift_nurse[r][s],d=s/in.ShiftsPerDay(),p,rel_sh,j;
   room_shift_nurse[r][s]=nn;
   j=FindRoominNurseList(r,on,s);
   nurse_shift_room_list[on][s].erase(nurse_shift_room_list[on][s].begin()+j);
   nurse_shift_room_list[nn][s].emplace_back(r);
-  for(i=0;i<room_day_patient_list[r][d].size();i++){
+  for(size_t i=0;i<room_day_patient_list[r][d].size();i++){
     p=room_day_patient_list[r][d][i];
     ever_assigned[p][on]--;
     ever_assigned[p][nn]++;
@@ -831,7 +834,7 @@ void IH_Output::SwapNursesPatients(int p1,int p2){
 }
 
 int IH_Output::FindPatientinOT(int p, int ot, int ad) const{
-  for(int i=0;i<operatingtheater_day_patient_list[ot][ad].size();i++){
+  for(size_t i=0;i<operatingtheater_day_patient_list[ot][ad].size();i++){
     if(operatingtheater_day_patient_list[ot][ad][i]==p)
       return i; 
   }
@@ -839,7 +842,7 @@ int IH_Output::FindPatientinOT(int p, int ot, int ad) const{
 }
 
 int IH_Output::FindPatientinRoom(int p, int r, int d) const{
-  for(int i=0;i<room_day_patient_list[r][d].size();i++){
+  for(size_t i=0;i<room_day_patient_list[r][d].size();i++){
     if(room_day_patient_list[r][d][i]==p)
       return i; 
   }
@@ -847,7 +850,7 @@ int IH_Output::FindPatientinRoom(int p, int r, int d) const{
 }
 
 int IH_Output::FindRoominNurseList(int r, int n, int s) const{
-  for(int i=0;i<nurse_shift_room_list[n][s].size();i++){
+  for(size_t i=0;i<nurse_shift_room_list[n][s].size();i++){
     if(nurse_shift_room_list[n][s][i]==r)
       return i; 
   }
@@ -855,7 +858,7 @@ int IH_Output::FindRoominNurseList(int r, int n, int s) const{
 }
 
 int IH_Output::FindPatientinDailyAdmission(int p, int d) const{
-  for(int i=0;i<daily_admissions[d].size();i++){
+  for(size_t i=0;i<daily_admissions[d].size();i++){
     if(daily_admissions[d][i]==p)
       return i; 
   }
@@ -1667,7 +1670,7 @@ int IH_Output::OverlappingSwapExcess(int p1,int p2) const{
   int right_end = min(admission_day[p_right]+st_right,in.Days()), right_fend = min(admission_day[p_right]+st_left,in.Days());
   vector<int>overlapping_p = FindCurrentOverlappingNurses(p_left,p_right);
   vector<int>overlapping_f = FindFutureOverlappingNurses(p_left,p_right);
-  int idx_cur=0,idxl=0,idxr=0,idx_fut=0;
+  size_t idx_cur=0,idxl=0,idxr=0,idx_fut=0;
   vector<int>overlappings;
   if(st_left>st_right)
     overlappings = FindOverlappingNurses(p_left,d_right,r_right);
